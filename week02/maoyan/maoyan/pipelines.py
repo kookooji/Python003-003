@@ -6,7 +6,7 @@
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
-
+import pymysql
 
 class MaoyanPipeline:
     def open_spider(self,spider):
@@ -24,5 +24,20 @@ class MaoyanPipeline:
     def close_spider(self,spider):
         print('爬虫结束')
 
-
-    
+#将数据保存到数据库
+class mysqlPipeline(object):
+    conn = None
+    def open_spider(self, spider):
+        self.conn =pymysql.Connect(host='localhost', port=3306, user='root', password='123456', db='movies')
+    def proccess_item(self, item, spider):
+        self.cursor = self.conn.cursor()
+        try:
+            self.cursor.execute('insert into maoyan values("s%","s%","s%")'%(item["title"],item["flim_type"],item['flim_date']))
+            self.conn.commit()
+        except Exception as e:
+            print(e)
+            self.conn.rollback()
+        return item
+    def close_spider(self, spider):
+        self.cursor.close()
+        self.conn.close()
